@@ -91,7 +91,7 @@ bool AEnemyCharacter::CanSeeActor(const AActor* const targetActor) const
 	GetWorld()->LineTraceSingleByChannel(hit, start, end, channel, queryParams);
 
 	//Set color of line trace to green if blocked or red if not blocked
-	FColor lineColor = (hit.bBlockingHit) ? FColor::Green : FColor::Red;
+	FColor lineColor = (hit.bBlockingHit) ? FColor::Red : FColor::Green;
 
 	//Show the line trace inside the game
 	DrawDebugLine(GetWorld(), start, end, lineColor);
