@@ -19,9 +19,27 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	ACharacter* targetCharacter;
+	//Whether the enemy can see the player this frame
+	bool bCanSeePlayer = false;
+	//Whether the enemy could see the player last frame
+	bool bPreviousCanSeePlayer = false;
 
+	//Timer variables
+	FTimerHandle ThrowTimerHandle;
+
+	float ThrowingInterval = 2.f;
+
+	float ThrowingDelay = 0.5f;
+
+	void ThrowDodgeball();
+
+public:	
+	//The class used to spawn a dodgeball object
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category =
+		Dodgeball)
+		TSubclassOf<class ADodgeballProjectile> DodgeballClass;
+
+	ACharacter* targetCharacter;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -31,10 +49,9 @@ public:
 
 
 	//Change rotation of character to face a given target actor
-	void LookAtActor(AActor* targetActor);
+	bool LookAtActor(AActor* targetActor);
 
 	//Can enemy see given target actor
 	bool CanSeeActor(const AActor* const targetActor) const;
-
 
 };

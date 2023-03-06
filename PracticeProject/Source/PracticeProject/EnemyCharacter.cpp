@@ -2,9 +2,11 @@
 
 
 #include "EnemyCharacter.h"
+#include "DodgeballProjectile.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include <Kismet/KismetMathLibrary.h>
+#include "TimerManager.h"
 
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
@@ -23,6 +25,22 @@ void AEnemyCharacter::BeginPlay()
 	this->targetCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
 }
 
+void AEnemyCharacter::ThrowDodgeball()
+{
+	if (DodgeballClass == nullptr)
+	{
+		return;
+	}
+
+	FVector ForwardVector = GetActorForwardVector();
+	float SpawnDistance = 40.f;
+	FVector SpawnLocation = GetActorLocation() + (ForwardVector *
+		SpawnDistance);
+	//Spawn new dodgeball
+	GetWorld()->SpawnActor<ADodgeballProjectile>(DodgeballClass,
+		SpawnLocation, GetActorRotation());
+}
+
 // Called every frame
 void AEnemyCharacter::Tick(float DeltaTime)
 {
@@ -32,16 +50,35 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	//ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(this,0);
 
 	//Look at the player character every frame
-	LookAtActor(targetCharacter);
+	bCanSeePlayer = LookAtActor(targetCharacter);
 
+	if (bCanSeePlayer != bPreviousCanSeePlayer)
+	{
+		if (bCanSeePlayer)
+		{
+			//Start throwing dodgeballs
+			GetWorldTimerManager().SetTimer(ThrowTimerHandle,
+				this,
+				&AEnemyCharacter::ThrowDodgeball, ThrowingInterval,
+				true,
+				ThrowingDelay);
+		}
+		else
+		{
+			//Stop throwing dodgeballs
+			GetWorldTimerManager().ClearTimer(ThrowTimerHandle);
+		}
+	}
+
+	bPreviousCanSeePlayer = bCanSeePlayer;
 
 }
 
-void AEnemyCharacter::LookAtActor(AActor* targetActor)
+bool AEnemyCharacter::LookAtActor(AActor* targetActor)
 {
 	if (targetActor == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (CanSeeActor(targetActor))
@@ -57,7 +94,11 @@ void AEnemyCharacter::LookAtActor(AActor* targetActor)
 
 		//Set enemys rotation to that rotation
 		SetActorRotation(lookAtRotation);
+
+		return true;
 	}
+
+	return false;
 }
 
 //Using line casting (raycasting) to check if this enemy is blocked by something

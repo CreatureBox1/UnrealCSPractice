@@ -17,9 +17,9 @@
 // Sets default values
 ATopDownCharacter::ATopDownCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	//PrimaryActorTick.bCanEverTick = true;
-	
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -58,16 +58,23 @@ ATopDownCharacter::ATopDownCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	//HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
+// Called when the game starts or when spawned
+void ATopDownCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+// Called to bind functionality to input
 void ATopDownCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	//Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
 
@@ -89,9 +96,11 @@ void ATopDownCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 
 		EnhancedPlayerInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATopDownCharacter::Move);
-		EnhancedPlayerInputComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATopDownCharacter::Jump);
-		EnhancedPlayerInputComponent->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ATopDownCharacter::StopJumping);
 	}
+	EnhancedPlayerInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATopDownCharacter::Move);
+	EnhancedPlayerInputComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATopDownCharacter::Jump);
+	EnhancedPlayerInputComponent->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ATopDownCharacter::StopJumping);
+
 }
 
 void ATopDownCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
@@ -107,9 +116,10 @@ void ATopDownCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Loca
 void ATopDownCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D InputValue = Value.Get<FVector2D>();
+	//if (Controller != nullptr && (InputValue.X != 0.0f || InputValue.Y != 0.0f))
 	if (FollowCamera != nullptr && (InputValue.X != 0.0f || InputValue.Y != 0.0f))
 	{
-		//Using follow camera instead of controller
+		//const FRotator YawRotation(0, Controller->GetControlRotation().Yaw, 0);
 		const FRotator YawRotation(0, FollowCamera->GetComponentRotation().Yaw, 0);
 
 		if (InputValue.X != 0.0f)
@@ -128,3 +138,4 @@ void ATopDownCharacter::Move(const FInputActionValue& Value)
 		}
 	}
 }
+
