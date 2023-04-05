@@ -2,6 +2,7 @@
 
 
 #include "Grabber.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
 
 // Sets default values for this component's properties
 UGrabber::UGrabber()
@@ -19,7 +20,7 @@ void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 	
 }
 
@@ -29,8 +30,26 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	//FRotator MyRotation = GetComponentRotation();
-	
+	if (PhysicsHandle == nullptr)
+	{
+		return;
+	}
+
+	if (PhysicsHandle->GetGrabbedComponent() != nullptr)
+	{
+		FVector TargetLocation = GetComponentLocation() + GetForwardVector() * HoldDistance;
+		PhysicsHandle->SetTargetLocationAndRotation(TargetLocation, GetComponentRotation());
+	}
+}
+
+void UGrabber::Grab()
+{
+
+	if (PhysicsHandle == nullptr)
+	{
+		return;
+	}
+
 	//Drawing a debug line forward from player
 	FVector StartPos = GetComponentLocation();
 	FVector EndPos = StartPos + GetForwardVector() * MaxGrabDistance;
@@ -44,18 +63,55 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	FHitResult hit;
 
 	//Geometry Sweep 
-	bool HasHit = GetWorld()->SweepSingleByChannel(hit,StartPos,EndPos,FQuat::Identity,
-													ECC_GameTraceChannel2, SphereShape);
+	bool HasHit = GetWorld()->SweepSingleByChannel(hit, StartPos, EndPos, FQuat::Identity,
+		ECC_GameTraceChannel2, SphereShape);
 
 	if (HasHit)
 	{
-		FString HitActorName = hit.GetActor()->GetActorNameOrLabel();
+		UPrimitiveComponent* HitComponent = hit.GetComponent();
+		//Physics objects not moved for a while will go to sleep. 
+		//Have to wake them up again so they can be picked up.
+		HitComponent->WakeAllRigidBodies();
+
+		PhysicsHandle->GrabComponentAtLocationWithRotation
+		(
+			HitComponent, //Component that was hit
+			NAME_None, //Used when we dont want to specify a name
+			hit.ImpactPoint, //Location where we want to grab the object
+			GetComponentRotation() //We will use the rotation of the grabber
+		);
 
 	}
-	else
+
+
+	//Debug
+	
+	//if (HasHit)
+	//{
+	//	//Location of sphere when it impacts
+	//	DrawDebugSphere(GetWorld(), hit.Location, 10, 10, FColor::Green, false, 10);
+
+	//	//Where the sphere impacts the target
+	//	DrawDebugSphere(GetWorld(), hit.ImpactPoint, 10, 10, FColor::Red, false, 10);
+	//	FString HitActorName = hit.GetActor()->GetActorNameOrLabel();
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Display, TEXT("No actor hit!"));
+	//}
+}
+
+void UGrabber::Release()
+{
+	if (PhysicsHandle == nullptr)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No actor hit!"));
+		return;
 	}
 
+	if (PhysicsHandle->GetGrabbedComponent() != nullptr)
+	{
+		PhysicsHandle->GetGrabbedComponent()->WakeAllRigidBodies();
+		PhysicsHandle->ReleaseComponent();
+	}
 }
 
