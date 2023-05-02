@@ -67,6 +67,23 @@ void AOwnershipRolesCharacter::BeginPlay()
 	}
 }
 
+void AOwnershipRolesCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	const FString LocalRoleString = ROLE_TO_STRING(GetLocalRole());
+	const FString RemoteRoleString = ROLE_TO_STRING(GetRemoteRole());
+	const FString OwnerString = GetOwner() != nullptr ? GetOwner()->GetName() : TEXT("No Owner");
+	const FString ConnectionString = GetNetConnection() != nullptr ?
+		TEXT("Valid Connection") : TEXT("Invalid Connection");
+
+	const FString Values =
+		FString::Printf(TEXT("Nicholas Junkas\nLocalRole = %s\nRemoteRole = %s\nOwner = %s\nConnection = %s\n"),
+			*LocalRoleString, *RemoteRoleString, *OwnerString, *ConnectionString);
+
+	DrawDebugString(GetWorld(), GetActorLocation(), Values, nullptr, FColor::White, 0.0f, true);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -123,23 +140,6 @@ void AOwnershipRolesCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
-}
-
-void AOwnershipRolesCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	const FString LocalRoleString = ROLE_TO_STRING(GetLocalRole());
-	const FString RemoteRoleString = ROLE_TO_STRING(GetRemoteRole());
-	const FString OwnerString = GetOwner() != nullptr ? GetOwner()->GetName() : TEXT("No Owner");
-	const FString ConnectionString = GetNetConnection() != nullptr ?
-		TEXT("Valid Connection") : TEXT("Invalid Connection");
-
-	const FString Values =
-		FString::Printf(TEXT("Nicholas Junkas\nLocalRole = %s\nRemoteRole = %s\nOwner = %s\nConnection = %s\n"),
-			*LocalRoleString, *RemoteRoleString, *OwnerString, *ConnectionString);
-
-	DrawDebugString(GetWorld(), GetActorLocation(), Values, nullptr, FColor::White, 0.0f, true);
 }
 
 
