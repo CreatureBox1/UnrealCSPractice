@@ -55,6 +55,9 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRepNotify_B)
 		int32 B;
 
+	UFUNCTION()
+		void OnRepNotify_B();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -63,6 +66,8 @@ protected:
 	virtual void BeginPlay();
 
 	virtual void Tick(float DeltaTime) override;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 public:
 	/** Returns CameraBoom subobject **/
